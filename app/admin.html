@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>备忘录 - 管理端</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: #f5f5f5;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    .input-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .input-section input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-section input:focus {
+      border-color: #4a90d9;
+    }
+
+    .input-section button {
+      padding: 12px 24px;
+      background: #4a90d9;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .input-section button:hover {
+      background: #3a7bc8;
+      transform: scale(1.05);
+    }
+
+    .filter-section {
+      background: #fff;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .filter-btn {
+      padding: 8px 20px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #666;
+    }
+
+    .filter-btn:hover {
+      background: #e0e0e0;
+    }
+
+    .filter-btn.active {
+      background: #4a90d9;
+      color: #fff;
+    }
+
+    .memo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .memo-item {
+      background: #fff;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .memo-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .memo-item.completed .memo-text {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    .memo-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #4a90d9;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .memo-checkbox:hover {
+      background: rgba(74, 144, 217, 0.1);
+    }
+
+    .memo-item.completed .memo-checkbox {
+      background: #4a90d9;
+    }
+
+    .memo-item.completed .memo-checkbox::after {
+      content: "";
+      width: 6px;
+      height: 10px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translateY(-1px);
+    }
+
+    .memo-text {
+      flex: 1;
+      color: #333;
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 1.4;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.2s;
+      opacity: 0.7;
+    }
+
+    .delete-btn:hover {
+      background: #fdeaea;
+      opacity: 1;
+    }
+
+    .user-link {
+      display: block;
+      text-align: center;
+      margin-top: 30px;
+      color: #4a90d9;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .user-link:hover {
+      text-decoration: underline;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #888;
+      padding: 40px;
+      font-size: 16px;
+    }
+
+    .memo-count {
+      text-align: center;
+      color: #888;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>备忘录 - 管理端</h1>
+    
+    <div class="input-section">
+      <input type="text" id="memoInput" placeholder="记录点什么..." maxlength="200">
+      <button id="addBtn">添加</button>
+    </div>
+    
+    <div class="filter-section">
+      <button class="filter-btn active" data-filter="all">全部</button>
+      <button class="filter-btn" data-filter="active">未完成</button>
+      <button class="filter-btn" data-filter="completed">已完成</button>
+    </div>
+    
+    <div class="memo-count" id="memoCount"></div>
+    <div class="memo-list" id="memoList"></div>
+    
+    <a href="user.html" class="user-link" id="logoutLink">退出管理端 →</a>
+  </div>
+
+  <script>
+    // 验证访问权限
+    if (!localStorage.getItem('admin_verified')) {
+      window.location.href = 'user.html';
+    }
+    
+    const STORAGE_KEY = 'memos';
+    const ADMIN_PASSWORD = '201902';
+    let currentFilter = 'all';
+    
+    function getMemos() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : [];
+    }
+    
+    function saveMemos(memos) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(memos));
+    }
+    
+    function addMemo(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return false;
+      
+      const memos = getMemos();
+      memos.unshift({
+        id: Date.now(),
+        text: trimmed,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+      saveMemos(memos);
+      return true;
+    }
+    
+    function deleteMemo(id) {
+      const memos = getMemos().filter(m => m.id !== id);
+      saveMemos(memos);
+      render();
+    }
+    
+    function toggleMemo(id) {
+      const memos = getMemos().map(m => {
+        if (m.id === id) {
+          return { ...m, completed: !m.completed };
+        }
+        return m;
+      });
+      saveMemos(memos);
+      render();
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function render() {
+      const allMemos = getMemos();
+      const list = document.getElementById('memoList');
+      const count = document.getElementById('memoCount');
+      
+      let memos = allMemos;
+      if (currentFilter === 'active') {
+        memos = allMemos.filter(m => !m.completed);
+      } else if (currentFilter === 'completed') {
+        memos = allMemos.filter(m => m.completed);
+      }
+      
+      const activeCount = allMemos.filter(m => !m.completed).length;
+      const totalCount = allMemos.length;
+      
+      if (totalCount > 0) {
+        count.textContent = `共 ${totalCount} 条备忘，${activeCount} 条待完成`;
+      } else {
+        count.textContent = '';
+      }
+      
+      if (memos.length === 0) {
+        list.innerHTML = '<div class="empty-state">暂无备忘</div>';
+        return;
+      }
+      
+      list.innerHTML = memos.map(memo => `
+        <div class="memo-item ${memo.completed ? 'completed' : ''}" data-id="${memo.id}">
+          <div class="memo-checkbox"></div>
+          <span class="memo-text">${escapeHtml(memo.text)}</span>
+          <button class="delete-btn">删除</button>
+        </div>
+      `).join('');
+    }
+    
+    // 添加备忘
+    function handleAdd() {
+      const input = document.getElementById('memoInput');
+      if (addMemo(input.value)) {
+        input.value = '';
+        render();
+      }
+    }
+    
+    document.getElementById('addBtn').addEventListener('click', handleAdd);
+    document.getElementById('memoInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleAdd();
+      }
+    });
+    
+    // 事件委托
+    document.getElementById('memoList').addEventListener('click', (e) => {
+      const item = e.target.closest('.memo-item');
+      if (!item) return;
+      
+      const id = Number(item.dataset.id);
+      
+      if (e.target.classList.contains('delete-btn')) {
+        deleteMemo(id);
+      } else if (e.target.classList.contains('memo-checkbox') || e.target.classList.contains('memo-text')) {
+        toggleMemo(id);
+      }
+    });
+    
+    // 筛选功能
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        render();
+      });
+    });
+    
+    // 退出管理端
+    document.getElementById('logoutLink').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('admin_verified');
+      window.location.href = 'user.html';
+    });
+    
+    render();
+  </script>
+</body>
+</html>
